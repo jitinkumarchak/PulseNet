@@ -1,4 +1,5 @@
-const hospital = require("../models/Hospital");
+const Hospital = require("../models/Hospital");
+console.log("Hospital import:", Hospital);
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -45,7 +46,48 @@ exports.loginHospital = async (req, res) => {
       expiresIn: "7d",
     });
 
-    res.json({ token, hospital });
+    res.json({
+      token,
+      hospital: {
+        _id: hospital._id,
+        name: hospital.name,
+        email: hospital.email,
+        resources: hospital.resources,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+//Update Resources
+exports.updateResources = async (req, res) => {
+  try {
+    const hospitalId = req.user.id; //from token
+    const { icuBeds, generalBeds, oxygen, location } = req.body;
+
+    const hospital = await Hospital.findById(hospitalId);
+    if (!hospital) return res.status(404).json({ msg: "Hospital not Found" });
+
+    //update values
+    if (icuBeds) hospital.resources.icuBeds = icuBeds;
+    if (generalBeds) hospital.resources.generalBeds = generalBeds;
+    if (oxygen) hospital.resources.oxygen = oxygen;
+    if (location) {
+      hospital.location = {
+        lat: location.lat,
+        lng: location.lng,
+      };
+    }
+    hospital.lastUpdated = Date.now();
+
+    await hospital.save();
+
+    //real-time emit update to clients
+    const io = req.app.get("io");
+    io.emit("resourcesUpdated", hospital);
+
+    res.json({ msg: "Resources updated", hospital });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
