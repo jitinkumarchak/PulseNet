@@ -23,8 +23,8 @@ const hospitalSchema = new mongoose.Schema(
     address: String,
 
     location: {
-      lat: Number,
-      lng: Number,
+      lat: { type: Number, required: true },
+      lng: { type: Number, required: true },
     },
 
     resources: {
