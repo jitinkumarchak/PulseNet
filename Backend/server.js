@@ -27,6 +27,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log("User Disconnected : ", socket.id);
   });
+
+  socket.on("joinHospital", (hospitalId) => {
+    socket.join(hospitalId);
+    console.log("Hospital joined room:", hospitalId);
+  });
 });
 
 //make io accessible globally

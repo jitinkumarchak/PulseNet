@@ -22,6 +22,13 @@ function Home() {
       setHospitals((prev) =>
         prev.map((h) => (h._id === updatedHospital._id ? updatedHospital : h)),
       );
+
+      socket.on("userRequestUpdated", (updatedReq) => {
+        console.log("User received update:", updatedReq);
+
+        // show notification
+        alert(`Your request is ${updatedReq.status}`);
+      });
     });
 
     return () => socket.off("resourcesUpdated");

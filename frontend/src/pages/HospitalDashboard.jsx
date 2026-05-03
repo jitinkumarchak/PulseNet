@@ -24,27 +24,47 @@ function HospitalDashboard() {
 
   // 🔹 Load + socket
   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (!token) return;
+
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const hospitalId = payload.id;
+
+    socket.on("connect", () => {
+      console.log("Socket connected:", socket.id);
+      socket.emit("joinHospital", hospitalId);
+    });
+
     fetchRequests();
 
-    // Real-time new requests
+    // ✅ New request
     socket.on("newRequest", (newReq) => {
       setRequests((prev) => [newReq, ...prev]);
     });
 
+    // 🔥 THIS IS MISSING IN YOUR CODE
+    socket.on("requestUpdated", (updatedReq) => {
+      console.log("Real-time update:", updatedReq);
+
+      setRequests((prev) =>
+        prev.map((r) => (r._id === updatedReq._id ? updatedReq : r)),
+      );
+    });
+
     return () => {
+      socket.off("connect");
       socket.off("newRequest");
+      socket.off("requestUpdated");
     };
   }, []);
 
   // 🔹 Update request status
   const updateStatus = async (id, status) => {
-    console.log("STEP 1: Function called");
-
     try {
       const token = localStorage.getItem("token");
-      console.log("STEP 2: Token =", token);
 
-      const res = await API.patch(
+      await API.patch(
         "/request/update",
         { requestId: id, status },
         {
@@ -53,12 +73,8 @@ function HospitalDashboard() {
           },
         },
       );
-
-      console.log("STEP 3: API success", res.data);
-
-      await fetchRequests();
     } catch (err) {
-      console.error("STEP 4: ERROR", err.response?.data || err.message);
+      console.error("Update failed:", err.response?.data || err.message);
     }
   };
 
