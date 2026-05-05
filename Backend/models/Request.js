@@ -24,4 +24,7 @@ const requestSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+requestSchema.index({ hospitalId: 1 });
+requestSchema.index({ userId: 1 });
+
 module.exports = mongoose.model("Request", requestSchema);

@@ -24,6 +24,17 @@ function Home() {
       );
     });
 
+     const token = localStorage.getItem("token");
+
+  if (!token) return;
+
+  const payload = JSON.parse(atob(token.split(".")[1]));
+  const userId = payload.id;
+
+  socket.on("connect", () => {
+    socket.emit("joinUser", userId);
+  });
+
     socket.on("userRequestUpdated", (updatedReq) => {
       console.log("User received update:", updatedReq);
 
@@ -32,9 +43,10 @@ function Home() {
     });
 
     return () => {
-      socket.off("resourcesUpdated");
+      socket.off("connect");
       socket.off("userRequestUpdated");
     };
+
   }, []);
 
   const [bestHospital, setBestHospital] = useState(null);

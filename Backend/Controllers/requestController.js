@@ -9,6 +9,7 @@ exports.createRequest = async (req, res) => {
       UserName: userName,
       hospitalId,
       type,
+      userId,
     });
 
     await request.save();
@@ -39,31 +40,37 @@ exports.getHospitalRequests = async (req, res) => {
 // Update request status
 exports.updateRequestStatus = async (req, res) => {
   try {
-    console.log("FULL BODY:", req.body);
-
     const { requestId, status } = req.body;
 
-    console.log("Extracted status:", status);
+    // ✅ Validation
+    if (!["approved", "rejected"].includes(status)) {
+      return res.status(400).json({ msg: "Invalid status" });
+    }
 
-    const request = await Request.findById(requestId);
+    // ✅ Secure update (VERY IMPORTANT)
+    const request = await Request.findOne({
+      _id: requestId,
+      hospitalId: req.user.id,
+    });
 
-    console.log("Before update:", request.status);
+    if (!request) {
+      return res.status(404).json({ msg: "Request not found" });
+    }
 
     request.status = status;
-
     await request.save();
 
     const io = req.app.get("io");
 
+    // 🔥 Notify hospital (already in room)
     io.to(request.hospitalId.toString()).emit("requestUpdated", request);
-    io.to(request.userId.toString()).emit("userRequestUpdated", request);
-    io.emit("userRequestUpdated", request);
 
-    console.log("After update:", request.status);
+    // 🔥 Notify USER (NEW)
+    io.to(request.userId.toString()).emit("userRequestUpdated", request);
 
     res.json({ msg: "Request updated", request });
+
   } catch (err) {
-    console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
