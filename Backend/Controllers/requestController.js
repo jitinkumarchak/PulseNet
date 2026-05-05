@@ -6,7 +6,7 @@ exports.createRequest = async (req, res) => {
     const { userName, hospitalId, type } = req.body;
 
     const request = new Request({
-      userName,
+      UserName: userName,
       hospitalId,
       type,
     });
@@ -56,6 +56,7 @@ exports.updateRequestStatus = async (req, res) => {
     const io = req.app.get("io");
 
     io.to(request.hospitalId.toString()).emit("requestUpdated", request);
+    io.to(request.userId.toString()).emit("userRequestUpdated", request);
     io.emit("userRequestUpdated", request);
 
     console.log("After update:", request.status);

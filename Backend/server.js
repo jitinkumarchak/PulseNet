@@ -3,7 +3,6 @@ const http = require("http");
 const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 const cors = require("cors");
-const { prototype } = require("events");
 require("dotenv").config();
 
 const app = express();
@@ -32,6 +31,11 @@ io.on("connection", (socket) => {
     socket.join(hospitalId);
     console.log("Hospital joined room:", hospitalId);
   });
+  socket.on("joinUser", (userId) => {
+    socket.join(userId);
+    console.log("User joined:", userId);
+  });
+
 });
 
 //make io accessible globally
