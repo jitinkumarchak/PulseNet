@@ -14,11 +14,6 @@ module.exports = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
 
-    const request = await Request.findOne({
-     _id: requestId,
-      hospitalId: req.user.id
-     });
-
     next();
   } catch (err) {
     res.status(401).json({ msg: "Invalid token" });

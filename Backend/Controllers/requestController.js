@@ -3,7 +3,7 @@ const Request = require("../models/Request");
 // Create request
 exports.createRequest = async (req, res) => {
   try {
-    const { userName, hospitalId, type } = req.body;
+    const { userName, hospitalId, type, userId } = req.body;
 
     const request = new Request({
       UserName: userName,

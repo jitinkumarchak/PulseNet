@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import API from "../services/api";
 import socket from "../services/socket";
+import { GoogleMap, Marker, useLoadScript} from "@react-google-maps/api";
 
 function Home() {
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: "", // Add API key here
+  });
   const [hospitals, setHospitals] = useState([]);
 
   const fetchHospitals = useCallback(async () => {
@@ -79,9 +83,11 @@ function Home() {
       hospitalId,
       type: "ICU",
     });
+
   };
 
   return (
+  <>
     <div>
       <button onClick={findBest}>🚨 Find Emergency Hospital</button>
 
@@ -117,6 +123,28 @@ function Home() {
         </div>
       )}
     </div>
+
+    {!isLoaded ? (
+      <div>Loading Map...</div>
+    ) : (
+      <GoogleMap
+        zoom={12}
+        center={{ lat: 28.6, lng: 77.2 }}
+        mapContainerStyle={{ width: "100%", height: "400px" }}
+      >
+        {hospitals.map((h) => {
+          const lat = h.location?.coordinates ? h.location.coordinates[1] : (h.location?.lat || 0);
+          const lng = h.location?.coordinates ? h.location.coordinates[0] : (h.location?.lng || 0);
+          return (
+            <Marker
+              key={h._id}
+              position={{ lat, lng }}
+            />
+          );
+        })}
+      </GoogleMap>
+    )}
+  </>
   );
 }
 

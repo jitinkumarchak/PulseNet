@@ -87,13 +87,13 @@ exports.updateResources = async (req, res) => {
   }
 };
 
-//update location
+//update location — save as GeoJSON Point to match schema index
 exports.updateLocation = async (req, res) => {
   try {
     const hospitalId = req.user.id;
     const { lat, lng } = req.body;
 
-    if (!lat || !lng) {
+    if (lat == null || lng == null) {
       return res.status(400).json({ msg: "Latitude and longitude required" });
     }
 
@@ -102,7 +102,11 @@ exports.updateLocation = async (req, res) => {
       return res.status(404).json({ msg: "Hospital not found" });
     }
 
-    hospital.location = { lat, lng };
+    // GeoJSON format: coordinates = [longitude, latitude]
+    hospital.location = {
+      type: "Point",
+      coordinates: [parseFloat(lng), parseFloat(lat)],
+    };
 
     await hospital.save();
 
@@ -120,27 +124,39 @@ exports.getNearbyHospitals = async (req, res) => {
   try {
     const { lat, lng } = req.query;
 
-    if (!lat || !lng) {
+    if (lat == null || lng == null) {
       return res.status(400).json({ msg: "Location required" });
     }
 
+    const userLat = parseFloat(lat);
+    const userLng = parseFloat(lng);
+
     const hospitals = await Hospital.find();
 
-    // 🔥 Calculate distance manually (simple version)
-    const result = hospitals.map((h) => {
-      const distance = Math.sqrt(
-        Math.pow(h.location.lat - lat, 2) + Math.pow(h.location.lng - lng, 2),
-      );
+    // Calculate distance using GeoJSON coordinates [lng, lat]
+    const result = hospitals
+      .filter(
+        (h) =>
+          h.location &&
+          Array.isArray(h.location.coordinates) &&
+          h.location.coordinates.length === 2,
+      )
+      .map((h) => {
+        const hLng = h.location.coordinates[0];
+        const hLat = h.location.coordinates[1];
+        const distance = Math.sqrt(
+          Math.pow(hLat - userLat, 2) + Math.pow(hLng - userLng, 2),
+        );
 
-      return {
-        _id: h._id,
-        name: h.name,
-        location: h.location,
-        resources: h.resources,
-        lastUpdated: h.lastUpdated,
-        distance,
-      };
-    });
+        return {
+          _id: h._id,
+          name: h.name,
+          location: h.location,
+          resources: h.resources,
+          lastUpdated: h.lastUpdated,
+          distance,
+        };
+      });
 
     // Sort by nearest
     result.sort((a, b) => a.distance - b.distance);
@@ -166,15 +182,22 @@ exports.getBestHospital = async (req, res) => {
     let bestScore = Infinity;
 
     hospitals.forEach((h) => {
-      // Skip if no location
-      if (!h.location || h.location.lat == null || h.location.lng == null) {
+      // Skip if no valid GeoJSON location
+      if (
+        !h.location ||
+        !Array.isArray(h.location.coordinates) ||
+        h.location.coordinates.length !== 2
+      ) {
         return;
       }
 
+      // GeoJSON: coordinates = [longitude, latitude]
+      const hLng = h.location.coordinates[0];
+      const hLat = h.location.coordinates[1];
+
       // ✅ Distance
       const distance = Math.sqrt(
-        Math.pow(h.location.lat - userLat, 2) +
-          Math.pow(h.location.lng - userLng, 2),
+        Math.pow(hLat - userLat, 2) + Math.pow(hLng - userLng, 2),
       );
 
       // ✅ Availability
