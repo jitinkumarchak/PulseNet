@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Toaster } from "react-hot-toast";
 import Home from "./pages/Home";
 import HospitalDashboard from "./pages/HospitalDashboard";
 import Login from "./pages/Login";
@@ -7,7 +8,12 @@ function App() {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    return <Login />;
+    return (
+      <>
+        <Toaster position="top-center" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
+        <Login />
+      </>
+    );
   }
 
   const [view, setView] = useState("home"); // "home" or "dashboard"
