@@ -4,12 +4,10 @@ import { FiAlertCircle, FiActivity, FiClock, FiMapPin } from "react-icons/fi";
 import toast from "react-hot-toast";
 import API from "../services/api";
 import socket from "../services/socket";
-import { GoogleMap, Marker, useLoadScript } from "@react-google-maps/api";
+import HospitalMap from "../components/maps/HospitalMap";
 
 function Home() {
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: "", // Add API key here
-  });
+
   const [hospitals, setHospitals] = useState([]);
   const [bestHospital, setBestHospital] = useState(null);
   const [isFinding, setIsFinding] = useState(false);
@@ -18,7 +16,7 @@ function Home() {
     try {
       const res = await API.get("/hospital/nearby?lat=28.6&lng=77.2");
       setHospitals(res.data);
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       toast.error("Failed to fetch nearby hospitals");
     }
@@ -94,17 +92,22 @@ function Home() {
         type: "ICU",
       });
       toast.success("Request sent successfully!", { id: loadingToast });
-    } catch(err) {
+    } catch (err) {
       toast.error("Failed to send request", { id: loadingToast });
     }
   };
 
+  navigator.geolocation.getCurrentPosition((position) => {
+    console.log(position.coords.latitude);
+    console.log(position.coords.longitude);
+  });
+
   return (
     <div className="min-h-screen bg-[#020617] text-white p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto space-y-8">
-        
+
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-col md:flex-row items-center justify-between gap-6 bg-white/[0.02] border border-white/10 p-6 sm:p-8 rounded-3xl backdrop-blur-xl shadow-2xl relative overflow-hidden"
@@ -117,7 +120,7 @@ function Home() {
             </h1>
             <p className="text-slate-400 mt-2 font-medium text-sm sm:text-base">Real-time ICU & Bed availability monitoring near your location.</p>
           </div>
-          <motion.button 
+          <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={findBest}
@@ -162,7 +165,7 @@ function Home() {
                     </span>
                   </div>
                 </div>
-                <motion.button 
+                <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => requestBed(bestHospital._id)}
@@ -176,9 +179,9 @@ function Home() {
         </AnimatePresence>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
+
           {/* Hospitals List */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
@@ -211,7 +214,7 @@ function Home() {
                     <div className="text-xs text-slate-500 flex items-center gap-1.5 font-medium">
                       <FiClock /> {new Date(h.lastUpdated).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
-                    <button 
+                    <button
                       onClick={() => requestBed(h._id)}
                       className="text-sm font-semibold bg-white/5 hover:bg-cyan-500/20 text-cyan-400 hover:text-cyan-300 px-4 py-2 rounded-lg transition-colors border border-transparent hover:border-cyan-500/30"
                     >
@@ -229,120 +232,22 @@ function Home() {
           </motion.div>
 
           {/* Map Section */}
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 }}
-            className="lg:col-span-2 relative group rounded-3xl overflow-hidden border border-white/10 bg-white/[0.02] backdrop-blur-xl h-[400px] lg:h-[650px] shadow-2xl"
-          >
-            {!isLoaded ? (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="animate-spin h-8 w-8 border-4 border-cyan-500/30 border-t-cyan-500 rounded-full"></div>
-              </div>
-            ) : (
-              <GoogleMap
-                zoom={12}
-                center={{ lat: 28.6, lng: 77.2 }}
-                mapContainerStyle={{ width: "100%", height: "100%" }}
-                options={{
-                  styles: [
-                    { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
-                    { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
-                    {
-                      featureType: "administrative.locality",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#d59563" }],
-                    },
-                    {
-                      featureType: "poi",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#d59563" }],
-                    },
-                    {
-                      featureType: "poi.park",
-                      elementType: "geometry",
-                      stylers: [{ color: "#263c3f" }],
-                    },
-                    {
-                      featureType: "poi.park",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#6b9a76" }],
-                    },
-                    {
-                      featureType: "road",
-                      elementType: "geometry",
-                      stylers: [{ color: "#38414e" }],
-                    },
-                    {
-                      featureType: "road",
-                      elementType: "geometry.stroke",
-                      stylers: [{ color: "#212a37" }],
-                    },
-                    {
-                      featureType: "road",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#9ca5b3" }],
-                    },
-                    {
-                      featureType: "road.highway",
-                      elementType: "geometry",
-                      stylers: [{ color: "#746855" }],
-                    },
-                    {
-                      featureType: "road.highway",
-                      elementType: "geometry.stroke",
-                      stylers: [{ color: "#1f2835" }],
-                    },
-                    {
-                      featureType: "road.highway",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#f3d19c" }],
-                    },
-                    {
-                      featureType: "transit",
-                      elementType: "geometry",
-                      stylers: [{ color: "#2f3948" }],
-                    },
-                    {
-                      featureType: "transit.station",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#d59563" }],
-                    },
-                    {
-                      featureType: "water",
-                      elementType: "geometry",
-                      stylers: [{ color: "#17263c" }],
-                    },
-                    {
-                      featureType: "water",
-                      elementType: "labels.text.fill",
-                      stylers: [{ color: "#515c6d" }],
-                    },
-                    {
-                      featureType: "water",
-                      elementType: "labels.text.stroke",
-                      stylers: [{ color: "#17263c" }],
-                    },
-                  ],
-                  disableDefaultUI: true,
-                }}
-              >
-                {hospitals.map((h) => {
-                  const lat = h.location?.coordinates ? h.location.coordinates[1] : (h.location?.lat || 0);
-                  const lng = h.location?.coordinates ? h.location.coordinates[0] : (h.location?.lng || 0);
-                  return (
-                    <Marker
-                      key={h._id}
-                      position={{ lat, lng }}
-                    />
-                  );
-                })}
-              </GoogleMap>
-            )}
-            {/* Map overlay gradient for seamless dark theme blending */}
-            <div className="absolute inset-0 pointer-events-none rounded-3xl border border-white/10 shadow-[inset_0_0_40px_rgba(2,6,23,0.8)]"></div>
-          </motion.div>
+
+          <div className="mb-6">
+
+            <h1 className="text-4xl font-bold">
+              Nearby Hospitals
+            </h1>
+
+            <p className="text-slate-400 mt-2">
+              Real-time hospital availability and emergency response.
+            </p>
+
+          </div>
+          <HospitalMap
+            hospitals={hospitals}
+            requestBed={requestBed}
+          />
         </div>
 
       </div>
