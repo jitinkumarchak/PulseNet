@@ -5,7 +5,7 @@ import {
     Popup,
 } from "react-leaflet";
 
-function HospitalMap({ hospitals, requestBed }) {
+function HospitalMap({ hospitals, requestBed, ambulances }) {
 
     return (
         <div className="rounded-3xl overflow-hidden border border-slate-800">
@@ -70,6 +70,41 @@ function HospitalMap({ hospitals, requestBed }) {
                     </Marker>
 
                 ))}
+                {
+                    ambulances.map((ambulance) => (
+
+                        <Marker
+                            key={ambulance._id}
+                            position={[
+                                ambulance.location.lat,
+                                ambulance.location.lng,
+                            ]}
+                        >
+
+                            <Popup>
+
+                                <div>
+
+                                    <h2 className="font-bold">
+                                        Ambulance
+                                    </h2>
+
+                                    <p>
+                                        Driver: {ambulance.driverName}
+                                    </p>
+
+                                    <p>
+                                        Status: {ambulance.status}
+                                    </p>
+
+                                </div>
+
+                            </Popup>
+
+                        </Marker>
+
+                    ))
+                }
 
             </MapContainer>
 
