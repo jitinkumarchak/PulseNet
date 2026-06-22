@@ -1,8 +1,3 @@
-Since I can't reliably inspect the contents of your private project structure from GitHub, I'll generate a **professional README based on the PulseNet architecture we've built together** (real-time hospital coordination, ambulance assignment, maps, sockets, hospital dashboard, etc.).
-
-You can paste this directly into `README.md`.
-
----
 
 # PulseNet 🚑
 
