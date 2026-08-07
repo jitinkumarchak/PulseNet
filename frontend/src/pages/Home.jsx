@@ -163,8 +163,8 @@ function Home() {
   }, []);
 
   useEffect(() => {
-    const id = setTimeout(() => void fetchHospitals(), void fetchAmbulances(), 0);
-    return () => clearTimeout(id);
+    fetchHospitals();
+    fetchAmbulances();
   }, [fetchHospitals, fetchAmbulances]);
 
   useEffect(() => {
@@ -226,10 +226,13 @@ function Home() {
     }
   };
 
-  navigator.geolocation.getCurrentPosition((position) => {
-    console.log(position.coords.latitude);
-    console.log(position.coords.longitude);
-  });
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition((position) => {
+      console.log(position.coords.latitude);
+      console.log(position.coords.longitude);
+    });
+  }, []);
 
   // Derived stats (dummy values for unconnected data)
   const totalICU = hospitals.reduce((s, h) => s + (h.resources?.icuBeds?.available || 0), 0);
@@ -614,7 +617,7 @@ function Home() {
                 border: "1px solid rgba(255,255,255,0.06)",
                 background: "rgba(255,255,255,0.02)",
               }}>
-                <HospitalMap hospitals={hospitals} requestBed={requestBed} />
+                <HospitalMap hospitals={hospitals} requestBed={requestBed} ambulances={ambulances} />
               </div>
             </motion.div>
 

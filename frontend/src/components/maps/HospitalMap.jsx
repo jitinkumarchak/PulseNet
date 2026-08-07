@@ -5,7 +5,7 @@ import {
     Popup,
 } from "react-leaflet";
 
-function HospitalMap({ hospitals, requestBed, ambulances }) {
+function HospitalMap({ hospitals, requestBed, ambulances = [] }) {
 
     return (
         <div className="rounded-3xl overflow-hidden border border-slate-800">

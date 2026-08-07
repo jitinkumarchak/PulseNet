@@ -6,6 +6,7 @@ import Login from "./pages/Login";
 
 function App() {
   const token = localStorage.getItem("token");
+  const [view, setView] = useState("home"); // "home" or "dashboard"
 
   if (!token) {
     return (
@@ -15,8 +16,6 @@ function App() {
       </>
     );
   }
-
-  const [view, setView] = useState("home"); // "home" or "dashboard"
 
   return (
     <div>
